@@ -31,8 +31,6 @@ To display the module insert it in the config.js file. Here is an example:
     }
 ```
 
-<br>
-
 | Option  | Description | Type | Default |
 | ------- | --- | --- | --- |
 
