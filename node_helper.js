@@ -1,9 +1,5 @@
 /* Magic Mirror
-<<<<<<< HEAD
  * Module: Notification-To-Command
-=======
- * Module: Screen-Powersave-Notification
->>>>>>> 33dbe3d00d1f5b85d8acad202c6a42e288d6a553
  *
  * By Tom Hirschberger
  * MIT Licensed.
@@ -43,7 +39,6 @@ module.exports = NodeHelper.create({
       self.config = payload
       self.started = true
     } else {
-<<<<<<< HEAD
       if (self.started){
         if(typeof self.config.notifications[notification] !== 'undefined'){
           console.log(JSON.stringify(self.config))
@@ -62,24 +57,6 @@ module.exports = NodeHelper.create({
   
             self.runScript(cmd, sync)
           }
-=======
-      if(typeof self.config.notifications[notification] !== 'undefined'){
-        console.log(JSON.stringify(self.config))
-        console.log(this.name+ ": " + notification)
-        console.log(this.name + ': Received Notification: ' + notification + " now running configured command")
-        cmds = self.config.notifications[notification].cmds
-
-        for (var i = 0; i < cmds.length; i++) {
-          cmd = self.config.notifications[notification].cmds[i].cmd
-
-          if(typeof self.config.notifications[notification].cmds[i].sync !== 'undefined'){
-            sync = self.config.notifications[notification].cmds[i].sync
-          } else {
-            sync = false
-          }
-
-          self.runScript(cmd, sync)
->>>>>>> 33dbe3d00d1f5b85d8acad202c6a42e288d6a553
         }
       }
     }
