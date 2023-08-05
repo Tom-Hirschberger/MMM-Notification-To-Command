@@ -32,7 +32,7 @@ module.exports = NodeHelper.create({
       let spawnOutput = spawnSync(curCmd, args)
 
       if (spawnOutput.stderr != null){
-        let error = error.toString().trim()
+        let error = spawnOutput.stderr.toString().trim()
         if (error != ""){
           console.log(self.name + ': Error during script '+cmd+": ")
           console.log(spawnOutput.stderr.toString())
@@ -71,7 +71,6 @@ module.exports = NodeHelper.create({
           cmds = self.config.notifications[notification].cmds
   
           for (var i = 0; i < cmds.length; i++) {
-            console.log("Running with idx: "+i)
             cmd = self.config.notifications[notification].cmds[i].cmd
   
             if(typeof self.config.notifications[notification].cmds[i].sync !== 'undefined'){
