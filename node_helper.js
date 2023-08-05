@@ -7,6 +7,8 @@
 const NodeHelper = require('node_helper')
 const exec = require('child_process').exec
 const execSync = require('child_process').execSync
+const spawn = require('child_process').spawn
+const spawnSync = require('child_process').spawnSync
 
 module.exports = NodeHelper.create({
 
@@ -18,16 +20,38 @@ module.exports = NodeHelper.create({
     const self = this
     console.log(self.name + ': Running script: ' + cmd)
 
+    let args = []
+    let curCmd = cmd
+    if (cmd.indexOf(" ") !== -1) {
+        cmd_split = cmd.split(" ")
+        args = cmd_split.slice(1)
+        curCmd = cmd_split[0]
+    }
+
     if(sync){
-      execSync(cmd, function (error, stdout, stderr) {
-        if (error) {
-          console.log(stderr)
+      let spawnOutput = spawnSync(curCmd, args)
+
+      if (spawnOutput.stderr != null){
+        let error = error.toString().trim()
+        if (error != ""){
+          console.log(self.name + ': Error during script '+cmd+": ")
+          console.log(spawnOutput.stderr.toString())
         }
-      });
+      }
     } else {
-      exec(cmd, function (error, stdout, stderr) {
-        if (error) {
-          console.log(stderr)
+      let child = spawn(curCmd, args)
+
+      let scriptErrorOutput = ""
+      child.stderr.on('data', (data) => {
+        scriptErrorOutput+=data.toString()
+      });
+
+      child.on('close', function(code) {
+        scriptErrorOutput = scriptErrorOutput.trim()
+
+        if (scriptErrorOutput != "") {
+          console.log(self.name + ': Error during script call: ')
+          console.log(scriptErrorOutput)
         }
       });
     }
@@ -47,6 +71,7 @@ module.exports = NodeHelper.create({
           cmds = self.config.notifications[notification].cmds
   
           for (var i = 0; i < cmds.length; i++) {
+            console.log("Running with idx: "+i)
             cmd = self.config.notifications[notification].cmds[i].cmd
   
             if(typeof self.config.notifications[notification].cmds[i].sync !== 'undefined'){
