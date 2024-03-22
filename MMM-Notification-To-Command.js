@@ -19,6 +19,9 @@ Module.register('MMM-Notification-To-Command', {
   },
 
   notificationReceived: function (notification, payload) {
-    this.sendSocketNotification(notification, payload)
+	const self = this
+	if (typeof self.config.notifications[notification] !== "undefined"){
+		this.sendSocketNotification(notification, payload)
+	}
   }
 })
