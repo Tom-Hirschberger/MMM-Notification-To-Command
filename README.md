@@ -33,4 +33,17 @@ To display the module insert it in the config.js file. Here is an example:
 
 | Option  | Description | Type | Default |
 | ------- | --- | --- | --- |
+| notifications | A map containing which contains the name of the notifications you want to react on as keys and a object for each notification | Map | {} |
 
+### Notifications
+
+| Option  | Description | Type | Mandatory |
+| ------- | --- | --- | --- |
+| cmds | A array containing command objects | Array | true |
+
+### Commands
+
+| Option  | Description | Type | Mandatory |
+| ------- | --- | --- | --- |
+| cmd | A string containing the command you want to call with all of its options. | String | true |
+| sync | A flag which indicates if the script should wait for the command to finished before it calls the next command in the list | Boolean | false |
