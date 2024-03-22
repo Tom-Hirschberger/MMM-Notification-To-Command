@@ -9,12 +9,15 @@
 Module.register('MMM-Notification-To-Command', {
 
   defaults: {
-    notifications:{
-    }
+    notifications: {},
+	transformerFunctions: {},
+	transformers: [],
+	conditions: []
   },
 
   start: function () {
     Log.info("Starting module: " + this.name);
+	console.log("Sending config: "+JSON.stringify(this.config))
     this.sendSocketNotification('CONFIG', this.config)
   },
 
