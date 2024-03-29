@@ -5,8 +5,6 @@
  * MIT Licensed.
  */
 const NodeHelper = require('node_helper')
-const exec = require('child_process').exec
-const execSync = require('child_process').execSync
 const spawn = require('child_process').spawn
 const spawnSync = require('child_process').spawnSync
 
@@ -48,11 +46,8 @@ module.exports = NodeHelper.create({
     return false
   },
 
-  runScript: function (cmd, args, sync, notification, value) {
+  runScript: function (cmd, args, options, sync, notification, value) {
     const self = this
-
-	console.log("VALUE is: "+value)
-
 	let curCmd = cmd.replaceAll("###NOTIFICATION###",notification)
 	curCmd = curCmd.replaceAll("###VALUE###", value)
 
@@ -70,53 +65,50 @@ module.exports = NodeHelper.create({
 	console.log(self.name + ': Running script: ' + curCmd + " with args: "+curArgs)
 
     if(sync){
-      let spawnOutput = spawnSync(curCmd, curArgs)
+		let spawnOutput = spawnSync(curCmd, curArgs, options)
 
-      if (spawnOutput.stderr != null){
-        let error = spawnOutput.stderr.toString().trim()
-        if (error != ""){
-          console.log(self.name + ': Error during script '+cmd+": ")
-          console.log(spawnOutput.stderr.toString())
-        }
-      }
+		if (spawnOutput.stderr != null){
+			let error = spawnOutput.stderr.toString().trim()
+			if (error != ""){
+			console.log(self.name + ': Error during script '+cmd+": ")
+			console.log(spawnOutput.stderr.toString())
+			}
+		}
     } else {
-      let child = spawn(curCmd, curArgs)
+		let child = spawn(curCmd, curArgs, options)
 
-      let scriptErrorOutput = ""
-      child.stderr.on('data', (data) => {
-        scriptErrorOutput+=data.toString()
-      });
+		let scriptErrorOutput = ""
+		child.stderr.on('data', (data) => {
+			scriptErrorOutput+=data.toString()
+		});
 
-      child.on('close', function(code) {
-        scriptErrorOutput = scriptErrorOutput.trim()
+		child.on('close', function(code) {
+			scriptErrorOutput = scriptErrorOutput.trim()
 
-        if (scriptErrorOutput != "") {
-          console.log(self.name + ': Error during script call: ')
-          console.log(scriptErrorOutput)
-        }
-      });
+			if (scriptErrorOutput != "") {
+			console.log(self.name + ': Error during script call: ')
+			console.log(scriptErrorOutput)
+			}
+		});
     }
   },
 
   socketNotificationReceived: function (notification, payload) {
     const self = this
     if (notification === 'CONFIG' && self.started === false) {
-		console.log(JSON.stringify(payload))
     	self.config = payload
 
-		let notifications = self.config.notifications
-
-		for (let notification in notifications){
-			for (let i = 0; i < self.config.notifications[notification].cmds.length; i++) {
-				let cmdObj = self.config.notifications[notification].cmds[i]
+		for (let curNotification in self.config.notifications){
+			for (let i = 0; i < self.config.notifications[curNotification].cmds.length; i++) {
+				let cmdObj = self.config.notifications[curNotification].cmds[i]
 				let cmd = cmdObj.cmd
 				if (typeof cmdObj.args === "undefined"){
 					if (cmd.indexOf(" ") !== -1) {
 						cmd_split = cmd.split(" ")
-						self.config.notifications[notification].cmds[i].args = cmd_split.slice(1)
-						self.config.notifications[notification].cmds[i].cmd = cmd_split[0]
+						self.config.notifications[curNotification].cmds[i].args = cmd_split.slice(1)
+						self.config.notifications[curNotification].cmds[i].cmd = cmd_split[0]
 					} else {
-						self.config.notifications[notification].cmds[i].args = []
+						self.config.notifications[curNotification].cmds[i].args = []
 					}
 				}
 			}
@@ -124,80 +116,38 @@ module.exports = NodeHelper.create({
 
     	self.started = true
     } else {
-      if (self.started){
-		let cmds = self.config.notifications[notification].cmds
-		let curCmdsTransformers = [].concat(self.config.transformers)
-		if (typeof self.config.notifications[notification].transformers !== "undefined"){
-			curCmdsTransformers = curCmdsTransformers.concat(self.config.notifications[notification].transformers)
-		}
+		if (self.started){
+			let curCmds = self.config.notifications[notification].cmds
 
-		let curCmdsConditions = [].concat(self.config.conditions)
-		if (typeof self.config.notifications[notification].conditions !== "undefined"){
-			curCmdsConditions = curCmdsConditions.concat(self.config.notifications[notification].conditions)
-		}
+			for (let curCmdIdx = 0; curCmdIdx < curCmds.length; curCmdIdx++){
+				let curCmd = curCmds[curCmdIdx].cmd
+				let curArgs = curCmds[curCmdIdx].args
+				let curSpawnOptions = curCmds[curCmdIdx].spawnOptions
+				let curValue = payload[curCmdIdx]
+				let curConditions = curCmds[curCmdIdx].conditions
 
-		for (var i = 0; i < cmds.length; i++) {
-			let cmd = self.config.notifications[notification].cmds[i].cmd
-			let args = self.config.notifications[notification].cmds[i].args
-
-			let curCmdTransformers = [].concat(curCmdsTransformers)
-			if (typeof self.config.notifications[notification].cmds[i].transformers !== "undefined"){
-				curCmdTransformers = curCmdTransformers.concat(self.config.notifications[notification].cmds[i].transformers)
-			}
-
-			let curCmdConditions = [].concat(curCmdsConditions)
-			if (typeof self.config.notifications[notification].cmds[i].conditions !== "undefined"){
-				curCmdConditions = self.config.notifications[notification].cmds[i].conditions
-			}
-
-			let value = payload
-
-			if (curCmdTransformers != null){
-				for (let curTransformerIdentifier of curCmdTransformers){
-					console.log("Calling transformer: "+curTransformerIdentifier)
-					let curTransformer = self.config.transformerFunctions[curTransformerIdentifier]
-					if (typeof curTransformer !== "undefined") {
-						try {
-							console.log("VALUE_BEFORE: "+value)
-							value = curTransformer(value)
-							console.log("VALUE_AFTER */: "+value)
-						} catch (exception) {
-							console.log("Error during call of transformer function: "+curTransformerIdentifier+".")
-							console.log(exception)
-						}
-					} else {
-						console.log("Is undefined!")
-					}
-				}
-			}
-
-			if(typeof self.config.notifications[notification].cmds[i].sync !== 'undefined'){
-				sync = self.config.notifications[notification].cmds[i].sync
-			} else {
-				sync = false
-			}
-
-			if (curCmdConditions != null){
 				let conditionsValid = true
-				for(let curCondIdx = 0; curCondIdx < curCmdConditions.length; curCondIdx++){
-					let curCondition = curCmdConditions[curCondIdx]
+				for (let curConditionIdx = 0; curConditionIdx < curConditions.length; curConditionIdx++){
+					let curCondition = curConditions[curConditionIdx]
 					if((typeof curCondition["type"] !== "undefined") && (typeof curCondition["value"] !== "undefined")){
-						if(!self.validateCondition(value,curCondition["value"],curCondition["type"])){
-						  conditionsValid = false
-						  break
+						if(!self.validateCondition(curValue,curCondition["value"],curCondition["type"])){
+							conditionsValid = false
+							break
 						}
 					}
 				}
 
 				if (conditionsValid){
-					self.runScript(cmd, args, sync, notification, value)
+					let sync = false
+					if(typeof curCmds[curCmdIdx].sync !== 'undefined'){
+						sync = curCmds[curCmdIdx].sync
+					}
+
+					self.runScript(curCmd, curArgs, curSpawnOptions, sync, notification, curValue)
 				}
-			} else {
-				self.runScript(cmd, args, sync, notification, value)
 			}
 		}
-      }
-    }
+	}
   }
 })
 

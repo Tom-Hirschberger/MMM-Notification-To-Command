@@ -1,9 +1,11 @@
 # MMM-Notification-To-Command
-MMMM-Notification-To-Command is a module for the [MagicMirror](https://github.com/MichMich/MagicMirror) project by [Michael Teeuw](https://github.com/MichMich).
+
+MMM-Notification-To-Command is a module for the [MagicMirror](https://github.com/MichMich/MagicMirror) project by [Michael Teeuw](https://github.com/MichMich).
 
 It runs system commands (scripts) based on received notifications. One received notification can trigger multible scripts either in synchronous or asynchronous way.
 
 ## Installation
+
 ```sh
     cd ~/MagicMirror/modules
     git clone https://github.com/Tom-Hirschberger/MMM-Notification-To-Command.git
@@ -12,7 +14,9 @@ It runs system commands (scripts) based on received notifications. One received 
 ```
 
 ## Configuration
+
 To display the module insert it in the config.js file. Here is an example:
+
 ```js
     {
         module: 'MMM-Notification-To-Command',
@@ -34,6 +38,11 @@ To display the module insert it in the config.js file. Here is an example:
 | Option  | Description | Type | Default |
 | ------- | --- | --- | --- |
 | notifications | A map containing which contains the name of the notifications you want to react on as keys and a object for each notification | Map | {} |
+| transformerFunctions |  | Map | {} |
+| transformers |  | Array | [] |
+| conditions |  | Array | [] |
+| shell |  | String | "/bin/bash" |
+| spawnOptions |  | Map | {} |
 
 ### Notifications
 
