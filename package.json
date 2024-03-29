@@ -1,6 +1,6 @@
 {
   "name": "MMM-Notification-To-Command",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "main": "MMM-Notification-To-Command.js",
   "dependencies": {
